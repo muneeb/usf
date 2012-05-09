@@ -90,6 +90,7 @@ comp_access(usf_access_t *a1, usf_access_t *a2)
     c += a1->tid  != a2->tid;
     c += a1->len  != a2->len;
     c += a1->type != a2->type;
+    c += a1->operand != a2->operand;
 
     return c;
 }
@@ -163,18 +164,21 @@ static void
 print_access(const usf_access_t *a)
 {
     printf("[tid: %" PRIu16
-           " pc: 0x%" PRIx64
-           " addr: 0x%" PRIx64
-           " time: %" PRIu64
-           " len: %" PRIu16
-           " type: %" PRIu8 " (%s)]",
+	   " pc: 0x%" PRIx64,
+	   a->tid,
+	   a->pc);
 
-           a->tid,
-           a->pc,
-           a->addr,
-           a->time,
-           a->len,
-           a->type, usf_stratype(a->type));
+    if (a->operand != USF_OPERAND_UNKNOWN)
+        printf("(%" PRIu8 ")", a->operand);
+
+    printf(" addr: 0x%" PRIx64
+	   " time: %" PRIu64
+	   " len: %" PRIu16
+	   " type: %" PRIu8 " (%s)]",
+	   a->addr,
+	   a->time,
+	   a->len,
+	   a->type, usf_stratype(a->type));
 }
 
 static void
