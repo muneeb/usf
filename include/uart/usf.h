@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009-2011, Andreas Sandberg
+ * Copyright (C) 2009-2012, Andreas Sandberg
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,11 +43,25 @@ extern "C" {
 #define USF_VERSION(maj, min) (((maj & 0xFFFF) << 16) | ((min) & 0xFFFF))
 #define USF_VERSION_MAJOR(v) (((v) >> 16) & 0xFFFF)
 #define USF_VERSION_MINOR(v) ((v) & 0xFFFF)
-    
+
+/*
+ * Version history:
+ * 0.2: Initial public version
+ * 
+ * 0.3: Store operand number in access structure. Some non-RISC
+ * architectures have a tendency to do multiple memory operations per
+ * instruction. Prior to this version, it was not possible to know
+ * which of the operands performed a certain access.
+ */
 #define USF_VERSION_CURRENT_MAJOR 0
-#define USF_VERSION_CURRENT_MINOR 2
+#define USF_VERSION_CURRENT_MINOR 3
 #define USF_VERSION_CURRENT (USF_VERSION(USF_VERSION_CURRENT_MAJOR,     \
 					 USF_VERSION_CURRENT_MINOR))
+
+#define USF_TEST_VERSION(version, maj, min) (                           \
+    USF_VERSION_MAJOR(version) > (maj) ||                               \
+    (USF_VERSION_MAJOR(version) == (maj) &&                             \
+     USF_VERSION_MINOR(version) >= (min)))
 
 typedef uint16_t usf_version_t;
 

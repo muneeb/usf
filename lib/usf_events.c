@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009-2011, Andreas Sandberg
+ * Copyright (C) 2009-2012, Andreas Sandberg
  * Copyright (C) 2009-2011, David Eklov
  * All rights reserved.
  *
@@ -44,11 +44,19 @@ typedef struct {
 
 /* ********************************************************************** */
 
-#define DATA_LEN_ACCESS (2*sizeof(usf_addr_t) + \
-			 sizeof(usf_atime_t) +  \
-			 sizeof(usf_tid_t) +    \
-			 sizeof(usf_alen_t) +   \
-			 sizeof(usf_atype_t))
+#define DATA_LEN_ACCESS_0_2 (                              \
+        2 * sizeof(usf_addr_t) +                           \
+        sizeof(usf_atime_t) +                              \
+        sizeof(usf_tid_t) +                                \
+        sizeof(usf_alen_t) +                               \
+        sizeof(usf_atype_t))
+
+/* Version 0.3 of the format introduced the operand number field */
+#define DATA_LEN_ACCESS_0_3 (                              \
+        DATA_LEN_ACCESS_0_2 +                              \
+        sizeof(usf_operand_t))
+
+#define DATA_LEN_ACCESS_MAX DATA_LEN_ACCESS_0_3
 
 #define D_DELTA_pc (1 << 0)
 #define D_DELTA_addr (1 << 1)
@@ -57,6 +65,7 @@ typedef struct {
 #define D_CONST_tid (1 << 4)
 #define D_CONST_len (1 << 5)
 #define D_CONST_type (1 << 6)
+#define D_CONST_operand (1 << 7)
 
 #define PACK_UINT64(file, flags, buf, a, field)                         \
     pack_uint64(flags, buf,                                             \
@@ -84,7 +93,18 @@ typedef struct {
 			     &file->last_access.field, D_CONST_ ## field))
 
 static inline size_t
-delta_data_size(uint8_t flags)
+actual_access_len(const usf_file_t *file)
+{
+    usf_version_t version = file->header->version;
+
+    if (version >= USF_VERSION(0, 3))
+        return DATA_LEN_ACCESS_0_3;
+    else
+        return DATA_LEN_ACCESS_0_2;
+}
+
+static inline size_t
+delta_data_size(usf_version_t version, uint8_t flags)
 {
     size_t s = 0;
 
@@ -95,6 +115,9 @@ delta_data_size(uint8_t flags)
     s += flags & D_CONST_tid ? 0 : 2;
     s += flags & D_CONST_len ? 0 : 2;
     s += flags & D_CONST_type ? 0 : 1;
+
+    if (version >= USF_VERSION(0, 3))
+        s += flags & D_CONST_operand ? 0 : 1;
 
     return s;
 }
@@ -183,7 +206,7 @@ write_access(usf_file_t *file, const usf_access_t *a)
     usf_error_t error = USF_ERROR_OK;
 
     if (file->header->flags & USF_FLAG_DELTA) {
-	char buf[DATA_LEN_ACCESS + 1];
+	char buf[DATA_LEN_ACCESS_MAX + 1];
 	char *cur = buf + 1;
 	*buf = 0;
 	PACK_UINT64(file, buf, &cur, a, pc);
@@ -193,10 +216,14 @@ write_access(usf_file_t *file, const usf_access_t *a)
 	PACK_UINT16(file, buf, &cur, a, tid);
 	PACK_UINT16(file, buf, &cur, a, len);
 	PACK_UINT8(file, buf, &cur, a, type);
-        
+
+        if (file->header->version >= USF_VERSION(0, 3))
+            PACK_UINT8(file, buf, &cur, a, operand);
+
         E_ERROR(usf_internal_write(file, (const void *)buf, cur - buf));
     } else
-        E_ERROR(usf_internal_write(file, (const void *)a, DATA_LEN_ACCESS));
+        E_ERROR(usf_internal_write(file, (const void *)a,
+                                   actual_access_len(file)));
 
 ret_err:
     return error;
@@ -206,15 +233,16 @@ static usf_error_t
 read_access(usf_file_t *file, usf_access_t *a)
 {
     usf_error_t error = USF_ERROR_OK;
+    usf_version_t version = file->header->version;
 
     if (file->header->flags & USF_FLAG_DELTA) {
-	char buf[DATA_LEN_ACCESS + 1];
+	char buf[DATA_LEN_ACCESS_MAX + 1];
 	char *cur = buf + 1;
 	size_t size;
 
 	E_ERROR(usf_internal_read(file, (void *)buf, 1));
 
-	size = delta_data_size(*buf);
+	size = delta_data_size(version, *buf);
 	E_ERROR(usf_internal_read(file, (void *)cur, size));
 
 	UNPACK_UINT64(file, *buf, &cur, a, pc);
@@ -224,8 +252,15 @@ read_access(usf_file_t *file, usf_access_t *a)
 	UNPACK_UINT16(file, *buf, &cur, a, tid);
 	UNPACK_UINT16(file, *buf, &cur, a, len);
 	UNPACK_UINT8(file, *buf, &cur, a, type);
+
+        if (version >= USF_VERSION(0, 3))
+            UNPACK_UINT8(file, *buf, &cur, a, operand);
     } else
-        E_ERROR(usf_internal_read(file, (void *)a, DATA_LEN_ACCESS));
+        E_ERROR(usf_internal_read(file, (void *)a,
+                                  actual_access_len(file)));
+
+    if (version < USF_VERSION(0, 3))
+        a->operand = USF_OPERAND_UNKNOWN;
 
 ret_err:
     return error;

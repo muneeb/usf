@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009-2011, Andreas Sandberg
+ * Copyright (C) 2009-2012, Andreas Sandberg
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -84,6 +84,10 @@ enum {
 };
 typedef uint8_t usf_atype_t;
 
+/** Operand in a multi-operand access */
+typedef uint8_t usf_operand_t;
+#define USF_OPERAND_UNKNOWN ((usf_operand_t)-1)
+
 /** Memory access */
 typedef struct {
     usf_addr_t pc;
@@ -93,6 +97,8 @@ typedef struct {
     usf_tid_t tid;
     usf_alen_t len;
     usf_atype_t type;
+
+    usf_operand_t operand;
 } usf_access_t;
 
 #ifdef __cplusplus

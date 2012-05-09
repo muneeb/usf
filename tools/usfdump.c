@@ -68,14 +68,17 @@ static void
 print_access(const usf_access_t *a)
 {
     printf("[tid: %" PRIu16
-	   " pc: 0x%" PRIx64
-	   " addr: 0x%" PRIx64
+	   " pc: 0x%" PRIx64,
+	   a->tid,
+	   a->pc);
+
+    if (a->operand != USF_OPERAND_UNKNOWN)
+        printf("(%" PRIu8 ")", a->operand);
+
+    printf(" addr: 0x%" PRIx64
 	   " time: %" PRIu64
 	   " len: %" PRIu16
 	   " type: %" PRIu8 " (%s)]",
-
-	   a->tid,
-	   a->pc,
 	   a->addr,
 	   a->time,
 	   a->len,
@@ -103,7 +106,7 @@ print_event(const usf_event_t *e)
     case USF_EVENT_DANGLING:
 	printf("[DANGLING] pc1: ");
 	print_access(&e->u.dangling.begin);
-	printf(", ls: %u\n", (1U << e->u.sample.line_size));
+	printf(", ls: %u\n", (1U << e->u.dangling.line_size));
 	break;
     case USF_EVENT_BURST:
 	printf("[BURST] begin_time: %" PRIu64 "\n",
