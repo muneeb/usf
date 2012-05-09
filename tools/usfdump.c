@@ -96,7 +96,7 @@ print_event(const usf_event_t *e)
     case USF_EVENT_DANGLING:
 	printf("[DANGLING] pc1: ");
 	print_access(&e->u.dangling.begin);
-	printf(", ls: %u\n", (1U << e->u.sample.line_size));
+	printf(", ls: %u\n", (1U << e->u.dangling.line_size));
 	break;
     case USF_EVENT_BURST:
 	printf("[BURST] begin_time: %" PRIu64 "\n",
