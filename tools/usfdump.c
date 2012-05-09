@@ -93,6 +93,13 @@ print_event(const usf_event_t *e)
 	print_access(&e->u.sample.end);
 	printf(", ls: %u\n", (1U << e->u.sample.line_size));
 	break;
+    case USF_EVENT_STRIDE:
+	printf("[STRIDE] pc1: ");
+	print_access(&e->u.stride.begin);
+	printf(", pc2: ");
+	print_access(&e->u.stride.end);
+	printf(", ls: %u\n", (1U << e->u.stride.line_size));
+	break;
     case USF_EVENT_DANGLING:
 	printf("[DANGLING] pc1: ");
 	print_access(&e->u.dangling.begin);

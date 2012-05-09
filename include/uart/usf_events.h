@@ -41,7 +41,8 @@ enum {
     USF_EVENT_SAMPLE = 0,
     USF_EVENT_DANGLING,
     USF_EVENT_BURST,
-    USF_EVENT_TRACE
+    USF_EVENT_TRACE,
+    USF_EVENT_STRIDE,
 };
 
 typedef uint8_t usf_event_type_t;
@@ -52,6 +53,13 @@ typedef struct {
     usf_access_t end;
     usf_line_size_2_t line_size;
 } usf_event_sample_t;
+
+/** Sample between two accesses by the same PC*/
+typedef struct {
+    usf_access_t begin;
+    usf_access_t end;
+    usf_line_size_2_t line_size;
+} usf_event_stride_t;
 
 /** Dangling sample */
 typedef struct {
@@ -84,6 +92,7 @@ typedef struct {
 	usf_event_dangling_t dangling;
 	usf_event_burst_t burst;
 	usf_event_trace_t trace;
+        usf_event_stride_t stride;
     } u;
 } usf_event_t;
 

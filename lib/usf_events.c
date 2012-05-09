@@ -268,6 +268,40 @@ ret_err:
 /* ********************************************************************** */
 
 static usf_error_t
+write_stride(usf_file_t *file, const usf_event_t *event)
+{
+    usf_error_t error = USF_ERROR_OK;
+    const usf_event_stride_t *s = &event->u.stride;
+    assert(event->type == USF_EVENT_STRIDE);
+
+    E_ERROR(write_access(file, &s->begin));
+    E_ERROR(write_access(file, &s->end));
+    E_ERROR(usf_internal_write(file, (const void *)&s->line_size,
+                               sizeof(usf_line_size_2_t)));
+
+ret_err:
+    return error;
+}
+
+static usf_error_t
+read_stride(usf_file_t *file, usf_event_t *event)
+{
+    usf_error_t error = USF_ERROR_OK;
+    usf_event_stride_t *s = &event->u.stride;
+    assert(event->type == USF_EVENT_STRIDE);
+
+    E_ERROR(read_access(file, &s->begin));
+    E_ERROR(read_access(file, &s->end));
+    E_ERROR(usf_internal_read(file, (void *)&s->line_size,
+                              sizeof(usf_line_size_2_t)));
+
+ret_err:
+    return error;
+}
+
+/* ********************************************************************** */
+
+static usf_error_t
 write_dangling(usf_file_t *file, const usf_event_t *event)
 {
     usf_error_t error = USF_ERROR_OK;
@@ -367,7 +401,8 @@ event_io_t event_io[] = {
     { &write_sample, &read_sample },
     { &write_dangling, &read_dangling },
     { &write_burst, &read_burst },
-    { &write_trace, &read_trace }
+    { &write_trace, &read_trace },
+    { &write_stride, &read_stride }
 };
 
 static usf_error_t
