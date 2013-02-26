@@ -337,6 +337,42 @@ ret_err:
 /* ********************************************************************** */
 
 static usf_error_t
+write_smptrace(usf_file_t *file, const usf_event_t *event)
+{
+    usf_error_t error = USF_ERROR_OK;
+    uint32_t i;
+    const usf_event_smptrace_t *s = &event->u.smptrace;
+    assert(event->type == USF_EVENT_SMPTRACE);
+
+    E_ERROR(write_access(file, &s->begin));
+    for(i = 0; i < SMPTRACE_LEN; i++)
+        E_ERROR(usf_internal_write(file, (const void *)&s->ins_trace[i],
+                                   sizeof(usf_addr_t)));
+
+ret_err:
+    return error;
+}
+
+static usf_error_t
+read_smptrace(usf_file_t *file, usf_event_t *event)
+{
+    usf_error_t error = USF_ERROR_OK;
+    uint32_t i;
+    usf_event_smptrace_t *s = &event->u.smptrace;
+    assert(event->type == USF_EVENT_SMPTRACE);
+
+    E_ERROR(read_access(file, &s->begin));
+    for(i = 0; i < SMPTRACE_LEN; i++)
+        E_ERROR(usf_internal_read(file, (void *)&s->ins_trace[i],
+                                  sizeof(usf_addr_t)));
+
+ret_err:
+    return error;
+}
+
+/* ********************************************************************** */
+
+static usf_error_t
 write_dangling(usf_file_t *file, const usf_event_t *event)
 {
     usf_error_t error = USF_ERROR_OK;
@@ -437,7 +473,8 @@ event_io_t event_io[] = {
     { &write_dangling, &read_dangling },
     { &write_burst, &read_burst },
     { &write_trace, &read_trace },
-    { &write_stride, &read_stride }
+    { &write_stride, &read_stride },
+    { &write_smptrace, &read_smptrace }
 };
 
 static usf_error_t

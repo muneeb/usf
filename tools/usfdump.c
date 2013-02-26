@@ -86,6 +86,18 @@ print_access(const usf_access_t *a)
 }
 
 static void
+print_smptrace(const usf_addr_t *a)
+{
+
+    printf("[");
+    for (uint32_t i = 0; i < SMPTRACE_LEN; i++)
+        printf(", 0x%" PRIx64, a[i]);
+    
+    printf("]\n");
+}
+
+
+static void
 print_event(const usf_event_t *e)
 {
     switch (e->type) {
@@ -102,6 +114,11 @@ print_event(const usf_event_t *e)
 	printf(", pc2: ");
 	print_access(&e->u.stride.end);
 	printf(", ls: %u\n", (1U << e->u.stride.line_size));
+	break;
+    case USF_EVENT_SMPTRACE:
+	printf("[SMPTRACE] pc: ");
+	print_access(&e->u.smptrace.begin);
+        print_smptrace(e->u.smptrace.ins_trace);
 	break;
     case USF_EVENT_DANGLING:
 	printf("[DANGLING] pc1: ");

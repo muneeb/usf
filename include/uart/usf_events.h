@@ -43,6 +43,7 @@ enum {
     USF_EVENT_BURST,
     USF_EVENT_TRACE,
     USF_EVENT_STRIDE,
+    USF_EVENT_SMPTRACE,
 };
 
 typedef uint8_t usf_event_type_t;
@@ -60,6 +61,14 @@ typedef struct {
     usf_access_t end;
     usf_line_size_2_t line_size;
 } usf_event_stride_t;
+
+/* The length of the sampled trace is defined by SMPTRACE_LEN*/
+#define SMPTRACE_LEN 32
+
+typedef struct {
+    usf_access_t begin;
+    usf_addr_t ins_trace[SMPTRACE_LEN];
+} usf_event_smptrace_t;
 
 /** Dangling sample */
 typedef struct {
@@ -93,6 +102,7 @@ typedef struct {
 	usf_event_burst_t burst;
 	usf_event_trace_t trace;
         usf_event_stride_t stride;
+        usf_event_smptrace_t smptrace;
     } u;
 } usf_event_t;
 
