@@ -90,12 +90,22 @@ print_smptrace(const usf_addr_t *a)
 {
 
     printf("[");
-    for (uint32_t i = 0; i < SMPTRACE_LEN; i++)
+    for (uint32_t i = 0; i < SMP_INS_TRACE_LEN && a[i] != 0; i++)
         printf(", 0x%" PRIx64, a[i]);
     
     printf("]\n");
 }
 
+static void
+print_smp_data_trace(const usf_addr_t *a)
+{
+
+    printf("[");
+    for (uint32_t i = 0; i < SMP_DATA_TRACE_LEN && a[i] != 0; i+=2)
+        printf(",(pc: 0x%" PRIx64" addr: 0x%"PRIx64")", a[i], a[i+1]);
+    
+    printf("]\n");
+}
 
 static void
 print_event(const usf_event_t *e)
@@ -119,6 +129,11 @@ print_event(const usf_event_t *e)
 	printf("[SMPTRACE] pc: ");
 	print_access(&e->u.smptrace.begin);
         print_smptrace(e->u.smptrace.ins_trace);
+	break;
+    case USF_EVENT_SMP_DTRACE:
+        printf("[SMP_DTRACE] pc: ");
+	print_access(&e->u.smpdatatrace.begin);
+        print_smp_data_trace(e->u.smpdatatrace.data_trace);
 	break;
     case USF_EVENT_DANGLING:
 	printf("[DANGLING] pc1: ");
